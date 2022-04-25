@@ -4,63 +4,45 @@
 import PackageDescription
 
 let package = Package(
-    name: "WalletKit",
+    name: "CryptoCore",
     platforms: [
       .macOS(.v10_15),
       .iOS(.v13),
     ],
     products: [
-      .library(name: "WalletKit", targets: ["WalletKit"]),
+      .library(name: "CryptoCore", type: .static, targets: ["CryptoCore"]),
     ],
     dependencies: [
-        // 🔢 Arbitrary-precision arithmetic in pure Swift
-        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.0.0"),
-        
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(path: "./Sources/CryptoCore"),
+        .package(url: "https://github.com/apple/swift-crypto.git", .branch("main")),
     ],
     targets: [
-        // 📚 -- Mnemonic code for generating deterministic keys
-        .target(name: "BIP39", dependencies: [
+        // 👀 C helpers
+        .target(name: "keccaktiny", cSettings: [
+            .define("memset_s(W,WL,V,OL)=memset(W,V,OL)", .when(platforms: [.linux], configuration: nil))
+        ]),
+        .target(name: "secp256k1", cSettings: [
+          .define("ENABLE_MODULE_ECDH"),
+          .define("ENABLE_MODULE_RECOVERY"),
+        ]),
+
+        // 🎯 Target -- Base58
+        .target(name: "Base58", dependencies: [
+            .product(name: "Crypto", package: "swift-crypto"),
+        ]),
+
+        // 🎯 Target -- CryptoCore
+        .target(name: "CryptoCore", dependencies: [
+            "keccaktiny", 
+            "secp256k1",
+            "Base58",
+        ]),
+
+        // Test -- CryptoCore
+        .testTarget(name: "CryptoCoreTests", dependencies: [
             "CryptoCore"
         ]),
-        
-        // 💰 -- Hierarchical Deterministic Wallets
-        .target(name: "BIP32", dependencies: [
-            "CryptoCore",
-            "BigInt",
-        ]),
-
-        // 🏦 -- Multi-Account Hierarchy for Deterministic Wallets
-        .target(name: "BIP44", dependencies: [
-            "BIP32"
-        ]),
-
-        // 🧰 -- The main event!
-        .target(name: "WalletKit", dependencies: [
-            "BIP39",
-            "BIP44" /* incl. BIP32 */,
-        ]),
-
-        // Testing
-        .target(name: "XCTHelpers", dependencies:[
-            "WalletKit",
-        ]),
-
-        // Test -- BIP39
-        .testTarget(name: "BIP39Tests", dependencies: [
-            "XCTHelpers",
-        ]),
-        
-        // Test -- BIP32
-        .testTarget(name: "BIP32Tests", dependencies: [
-            "XCTHelpers",
-        ]),
-
-        // Test -- BIP44
-        .testTarget(name: "BIP44Tests", dependencies: [
-            "XCTHelpers",
-        ]),
-    ]
+    ],
+    swiftLanguageVersions : [.v5]
 )
 

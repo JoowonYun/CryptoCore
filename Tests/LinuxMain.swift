@@ -1,1 +1,1 @@
-fatalError("Use `swift test --enable-test-discovery` to run tests")
+fatalError("Please use --enable-test-discovery to run the tests instead")
