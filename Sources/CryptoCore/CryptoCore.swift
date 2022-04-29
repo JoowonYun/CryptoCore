@@ -1,10 +1,10 @@
-import CCryptoBoringSSL
+import Security
 
 private let charA = UInt8(UnicodeScalar("a").value)
 private let char0 = UInt8(UnicodeScalar("0").value)
 
 public enum RandomBytesError: Error {
-    case failed
+    case failed(OSStatus)
 }
 
 public enum ByteHexEncodingErrors: Error {
@@ -29,12 +29,17 @@ private func htoi(_ value: UInt8) throws -> UInt8 {
     
 public extension Data {
     static func randomBytes(_ count: Int) throws -> Data {
-        var bytes = [UInt8](repeating: 0, count: count)
-        guard CCryptoBoringSSL_RAND_bytes(&bytes, count) == 1 else {
-            throw RandomBytesError.failed
+        var buffer = Data(count: count)
+        try buffer.withUnsafeMutableBytes { pointer in
+            guard let bytes = pointer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                throw RandomBytesError.failed(errSecAllocate)
+            }
+            let status = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+            guard status == errSecSuccess else {
+                throw RandomBytesError.failed(status)
+            }
         }
-        
-        return Data(bytes)
+        return buffer
     }
     
     init(hexString: String) throws {
