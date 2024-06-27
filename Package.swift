@@ -21,11 +21,6 @@ let package = Package(
         .target(name: "keccaktiny", cSettings: [
             .define("memset_s(W,WL,V,OL)=memset(W,V,OL)", .when(platforms: [.linux], configuration: nil))
         ]),
-        .target(name: "secp256k1", cSettings: [
-          .define("ENABLE_MODULE_ECDH"),
-          .define("ENABLE_MODULE_RECOVERY"),
-        ]),
-
         // 🎯 Target -- Base58
         .target(name: "Base58", dependencies: [
             .product(name: "Crypto", package: "swift-crypto"),
@@ -33,8 +28,7 @@ let package = Package(
 
         // 🎯 Target -- CryptoCore
         .target(name: "CryptoCore", dependencies: [
-            "keccaktiny", 
-            "secp256k1",
+            "keccaktiny",
             "Base58",
         ]),
 
