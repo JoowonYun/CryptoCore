@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", .branch("main")),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
     ],
     targets: [
         // 👀 C helpers
